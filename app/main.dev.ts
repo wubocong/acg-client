@@ -9,7 +9,7 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
@@ -22,6 +22,7 @@ export default class AppUpdater {
   }
 }
 
+global.sharedObject = {};
 let mainWindow: BrowserWindow | null = null;
 let bilibiliWindow: BrowserWindow | null = null;
 
@@ -62,11 +63,11 @@ const createWindow = async () => {
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
         ? {
-            nodeIntegration: true
-          }
+          nodeIntegration: true
+        }
         : {
-            preload: path.join(__dirname, 'dist/renderer.prod.js')
-          }
+          preload: path.join(__dirname, 'dist/renderer.prod.js')
+        }
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
@@ -96,18 +97,24 @@ const createWindow = async () => {
   // eslint-disable-next-line
   new AppUpdater();
 
-  bilibiliWindow = new BrowserWindow({
-    width: 1024,
-    height: 728,
-    webPreferences: {
-      preload: './bilibili-inject.js'
-    }
+  ipcMain.handle('bilibili-login', () => {
+    bilibiliWindow = new BrowserWindow({
+      width: 1024,
+      height: 728,
+    });
+    global.sharedObject.bilibiliId = bilibiliWindow.webContents.id;
+
+    bilibiliWindow.loadURL('https://passport.bilibili.com/login');
+    const sendCookie = () => {
+      bilibiliWindow.webContents.session.cookies.get({ url: 'https://www.bilibili.com/' }).then((cookies) => {
+        mainWindow.webContents.send('bilibili-cookies', cookies);
+        bilibiliWindow.hide();
+        bilibiliWindow.webContents.removeListener('did-navigate', sendCookie);
+      });
+    };
+    bilibiliWindow.webContents.on('did-navigate', sendCookie);
   });
-  bilibiliWindow.loadURL('https://www.bilibili.com');
-  global.sharedObject = {
-    mainId: mainWindow.webContents.id,
-    bilibiliId: bilibiliWindow.webContents.id
-  };
+  global.sharedObject.mainId = mainWindow.webContents.id;
 };
 
 /**
