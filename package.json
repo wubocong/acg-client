@@ -261,6 +261,7 @@
     "@babel/helper-validator-identifier": "^7.9.0",
     "@fortawesome/fontawesome-free": "^5.12.1",
     "@hot-loader/react-dom": "^16.12.0",
+    "antd": "^4.0.3",
     "connected-react-router": "^6.6.1",
     "core-js": "^3.6.4",
     "devtron": "^1.4.0",

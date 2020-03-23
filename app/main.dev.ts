@@ -23,6 +23,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let bilibiliWindow: BrowserWindow | null = null;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -94,6 +95,19 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
+
+  bilibiliWindow = new BrowserWindow({
+    width: 1024,
+    height: 728,
+    webPreferences: {
+      preload: './bilibili-inject.js'
+    }
+  });
+  bilibiliWindow.loadURL('https://www.bilibili.com');
+  global.sharedObject = {
+    mainId: mainWindow.webContents.id,
+    bilibiliId: bilibiliWindow.webContents.id
+  };
 };
 
 /**

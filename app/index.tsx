@@ -2,8 +2,10 @@ import React, { Fragment } from 'react';
 import { render } from 'react-dom';
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader';
 import Root from './containers/Root';
+const { ipcRenderer } = require('electron');
+
 import { configureStore, history } from './store/configureStore';
-import './app.global.css';
+import 'antd/dist/antd.css';
 
 const store = configureStore();
 
@@ -17,3 +19,7 @@ document.addEventListener('DOMContentLoaded', () =>
     document.getElementById('root')
   )
 );
+
+ipcRenderer.on('bilibili-load', (e, html) => {
+  console.log(html);
+});
