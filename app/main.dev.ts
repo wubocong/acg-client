@@ -9,11 +9,16 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, net } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import fetch from 'node-fetch';
 import MenuBuilder from './menu';
 
+type BilibiliCookies = {
+  www: Array<object>;
+  space: Array<object>;
+};
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -25,6 +30,8 @@ export default class AppUpdater {
 global.sharedObject = {};
 let mainWindow: BrowserWindow | null = null;
 let bilibiliWindow: BrowserWindow | null = null;
+let bibililiCookies: BilibiliCookies = {};
+let bilibiliInfo: object = {};
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -48,6 +55,63 @@ const installExtensions = async () => {
   ).catch(console.log);
 };
 
+function bilibiliLogin() {
+  ipcMain.handle('bilibili-login', () => {
+    bilibiliWindow = new BrowserWindow({
+      width: 1024,
+      height: 728
+    });
+    global.sharedObject.bilibiliId = bilibiliWindow.webContents.id;
+
+    bilibiliWindow.loadURL('https://passport.bilibili.com/login');
+    const onlogin = (_: any, url: string) => {
+      if (url === 'https://www.bilibili.com/') {
+        bilibiliWindow.webContents.session.cookies
+          .get({ url: 'https://space.bilibili.com/' })
+          .then(cookies => {
+            bibililiCookies.space = cookies;
+          });
+        bilibiliWindow.webContents.session.cookies
+          .get({ url: 'https://www.bilibili.com/' })
+          .then(cookies => {
+            // mainWindow.webContents.send('bilibili-cookies', cookies);
+            // bilibiliWindow.hide();
+            bibililiCookies.www = cookies;
+            bilibiliInfo.userId = cookies.find(
+              cookie => cookie.name === 'DedeUserID'
+            ).value;
+            bilibiliWindow.webContents.removeListener('did-navigate', onlogin);
+            bibililiGetFollowing();
+          });
+      }
+    };
+    bilibiliWindow.webContents.on('did-navigate', onlogin);
+  });
+}
+
+function bibililiGetFollowing() {
+  // const request = net.request({
+  //   url:
+  //     'https://api.bilibili.com/x/relation/followings?vmid=' +
+  //     bibililiCookies.space.find(cookie => cookie.name === 'DedeUserID').value,
+  //   method: 'GET',
+  //   session: bilibiliWindow?.webContents.session
+  // });
+  // request.end();
+  // request.on('response', response => {
+  //   response.setEncoding('utf8');;
+  //   response.on('data', data => {
+  //     console.log(data.toString());
+  //   });
+  // });
+  fetch(
+    'https://api.bilibili.com/x/relation/followings?vmid=' + bilibiliInfo.userId
+  )
+    .then(res => res.json())
+    .then(json => {
+      mainWindow?.webContents.send('bilibili-followings', json);
+    });
+}
 const createWindow = async () => {
   if (
     process.env.NODE_ENV === 'development' ||
@@ -63,11 +127,11 @@ const createWindow = async () => {
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
         ? {
-          nodeIntegration: true
-        }
+            nodeIntegration: true
+          }
         : {
-          preload: path.join(__dirname, 'dist/renderer.prod.js')
-        }
+            preload: path.join(__dirname, 'dist/renderer.prod.js')
+          }
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
@@ -96,24 +160,8 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
+  bilibiliLogin();
 
-  ipcMain.handle('bilibili-login', () => {
-    bilibiliWindow = new BrowserWindow({
-      width: 1024,
-      height: 728,
-    });
-    global.sharedObject.bilibiliId = bilibiliWindow.webContents.id;
-
-    bilibiliWindow.loadURL('https://passport.bilibili.com/login');
-    const sendCookie = () => {
-      bilibiliWindow.webContents.session.cookies.get({ url: 'https://www.bilibili.com/' }).then((cookies) => {
-        mainWindow.webContents.send('bilibili-cookies', cookies);
-        bilibiliWindow.hide();
-        bilibiliWindow.webContents.removeListener('did-navigate', sendCookie);
-      });
-    };
-    bilibiliWindow.webContents.on('did-navigate', sendCookie);
-  });
   global.sharedObject.mainId = mainWindow.webContents.id;
 };
 

@@ -51,10 +51,27 @@ export default merge.smart(baseConfig, {
           }
         ]
       },
+      // Process antd separately
+      {
+        test: /\.css$/,
+        include: /antd/,
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              publicPath: './'
+            }
+          },
+          {
+            loader: 'css-loader'
+          }
+        ]
+      },
       // Pipe other styles through css modules and append to style.css
       {
         test: /^((?!\.global).)*\.css$/,
-        use: [
+        exclude: /antd/,
+        :use [
           {
             loader: MiniCssExtractPlugin.loader
           },

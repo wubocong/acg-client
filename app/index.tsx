@@ -20,7 +20,9 @@ document.addEventListener('DOMContentLoaded', () =>
   )
 );
 
-ipcRenderer.invoke('bilibili-login');
 ipcRenderer.on('bilibili-cookies', (e, cookies: string) => {
+  console.log(cookies);
+});
+ipcRenderer.on('bilibili-followings', (e, cookies: string) => {
   console.log(cookies);
 });

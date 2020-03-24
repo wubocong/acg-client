@@ -77,7 +77,20 @@ export default merge.smart(baseConfig, {
         ]
       },
       {
+        test: /\.css$/,
+        include: /antd/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader'
+          }
+        ]
+      },
+      {
         test: /^((?!\.global).)*\.css$/,
+        exclude: /antd/,
         use: [
           {
             loader: 'style-loader'

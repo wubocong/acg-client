@@ -25,8 +25,8 @@ const Root = ({ store, history }: Props) => (
       <App>
         <Layout className="layout">
           <Header>
-            <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['2']}>
-              <Menu.Item key="1"><Link to={routes.HOME}></Link></Menu.Item>
+            <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
+              <Menu.Item key="1"><Link to={routes.HOME}>HOME</Link></Menu.Item>
             </Menu>
           </Header>
           <Content style={{ padding: '0 50px' }}>
