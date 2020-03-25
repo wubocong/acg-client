@@ -2,10 +2,12 @@ import React, { Fragment } from 'react';
 import { render } from 'react-dom';
 import { AppContainer as ReactHotAppContainer } from 'react-hot-loader';
 import Root from './containers/Root';
-const { ipcRenderer } = require('electron');
+import { ipcRenderer } from 'electron';
+import 'antd/dist/antd.css';
 
 import { configureStore, history } from './store/configureStore';
-import 'antd/dist/antd.css';
+import { setFollowings } from './actions/bilibili';
+import { followingType } from './reducers/types';
 
 const store = configureStore();
 
@@ -23,6 +25,6 @@ document.addEventListener('DOMContentLoaded', () =>
 ipcRenderer.on('bilibili-cookies', (e, cookies: string) => {
   console.log(cookies);
 });
-ipcRenderer.on('bilibili-followings', (e, cookies: string) => {
-  console.log(cookies);
+ipcRenderer.on('bilibili-followings', (e, followings: Array<followingType>) => {
+  store.dispatch(setFollowings(followings));
 });

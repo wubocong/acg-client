@@ -57,6 +57,7 @@ const installExtensions = async () => {
 
 function bilibiliLogin() {
   ipcMain.handle('bilibili-login', () => {
+    if (bilibiliWindow) return;
     bilibiliWindow = new BrowserWindow({
       width: 1024,
       height: 728
@@ -109,7 +110,7 @@ function bibililiGetFollowing() {
   )
     .then(res => res.json())
     .then(json => {
-      mainWindow?.webContents.send('bilibili-followings', json);
+      mainWindow?.webContents.send('bilibili-followings', json.data.list);
     });
 }
 const createWindow = async () => {

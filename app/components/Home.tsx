@@ -1,12 +1,36 @@
 import React from 'react';
-const { ipcRenderer } = require('electron');
+import { ipcRenderer } from 'electron';
+import equal from 'fast-deep-equal';
+
+import { followingType } from '../reducers/types';
 
 export default class Home extends React.Component {
-  componentWillMount(){
+  state = { followings: [] };
+  componentDidMount() {
     ipcRenderer.invoke('bilibili-login');
   }
+  componentDidUpdate(prevProps) {
+    console.log('wbc1');
+    if (!equal(prevProps.bilibili, this.props.bilibili)) {
+      this.setState({ followings: this.props.bilibili.followings });
+    }
+  }
   render() {
-    const { follow } = this.props;
-    return <div>wbc</div>;
+    const { followings } = this.state;
+    return (
+      <article>
+        {followings.map((following: followingType) => (
+          <section key={following.mid}>
+            <a href={'https://space.bilibili.com/' + following.mid}>
+              {following.uname}
+            </a>
+            <img
+              src={following.face}
+              style={{ width: '120px', height: '120px' }}
+            />
+          </section>
+        ))}
+      </article>
+    );
   }
 }
