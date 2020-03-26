@@ -5,6 +5,7 @@ import Root from './containers/Root';
 import { ipcRenderer } from 'electron';
 import 'antd/dist/antd.css';
 
+import './app.global.scss';
 import { configureStore, history } from './store/configureStore';
 import { setFollowings } from './actions/bilibili';
 import { followingType } from './reducers/types';
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () =>
   )
 );
 
+history.push('/bilibili');
 ipcRenderer.on('bilibili-cookies', (e, cookies: string) => {
   console.log(cookies);
 });

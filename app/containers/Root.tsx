@@ -9,10 +9,10 @@ import { Layout, Menu } from 'antd';
 import { Store } from '../reducers/types';
 import routes from '../constants/routes.json';
 import App from '../containers/App';
-import HomePage from '../containers/HomePage';
-import CounterPage from '../containers/CounterPage';
+import BilibiliPage from '../containers/BilibiliPage';
+import AnimationPage from '../containers/AnimationPage';
 
-const { Header, Content, Footer } = Layout;
+const { Header, Footer } = Layout;
 
 type Props = {
   store: Store;
@@ -26,15 +26,20 @@ const Root = ({ store, history }: Props) => (
         <Layout className="layout">
           <Header>
             <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
-              <Menu.Item key="1"><Link to={routes.HOME}>HOME</Link></Menu.Item>
+              <Menu.Item key="1">
+                <Link to={routes.BILIBILI}>哔哩哔哩</Link>
+              </Menu.Item>
+              <Menu.Item key="2">
+                <Link to={routes.ANIMATION}>动画</Link>
+              </Menu.Item>
             </Menu>
           </Header>
-          <Content style={{ padding: '0 50px' }}>
+          <Layout style={{ padding: '0 50px' }}>
             <Switch>
-              <Route path={routes.COUNTER} component={CounterPage} />
-              <Route path={routes.HOME} component={HomePage} />
+              <Route path={routes.BILIBILI} component={BilibiliPage} />
+              <Route path={routes.ANIMATION} component={AnimationPage} />
             </Switch>
-          </Content>
+          </Layout>
           <Footer style={{ textAlign: 'center' }}>
             ACG Client ©2020 Created by Warrior!
           </Footer>
