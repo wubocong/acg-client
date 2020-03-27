@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () =>
   )
 );
 
-history.push('/bilibili');
 ipcRenderer.on('bilibili-cookies', (e, cookies: string) => {
   console.log(cookies);
 });

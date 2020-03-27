@@ -78,6 +78,7 @@ function bilibiliLogin() {
             // mainWindow.webContents.send('bilibili-cookies', cookies);
             // bilibiliWindow.hide();
             bibililiCookies.www = cookies;
+            bilibiliWindow.hide();
             bilibiliInfo.userId = cookies.find(
               cookie => cookie.name === 'DedeUserID'
             ).value;

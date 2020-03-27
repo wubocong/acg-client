@@ -11,6 +11,7 @@ import routes from '../constants/routes.json';
 import App from '../containers/App';
 import BilibiliPage from '../containers/BilibiliPage';
 import AnimationPage from '../containers/AnimationPage';
+import YHDM from '../components/YHDM';
 
 const { Header, Footer } = Layout;
 
@@ -37,7 +38,9 @@ const Root = ({ store, history }: Props) => (
           <Layout style={{ padding: '0 50px' }}>
             <Switch>
               <Route path={routes.BILIBILI} component={BilibiliPage} />
-              <Route path={routes.ANIMATION} component={AnimationPage} />
+              <Route exact path={routes.ANIMATION} component={AnimationPage} />
+              <Route path={routes.YHDM} component={YHDM} />
+              <Route component={BilibiliPage} />
             </Switch>
           </Layout>
           <Footer style={{ textAlign: 'center' }}>

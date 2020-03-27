@@ -1,4 +1,5 @@
 {
   "BILIBILI": "/bilibili",
-  "ANIMATION": "/animation"
+  "ANIMATION": "/animation",
+  "YHDM": "/animation/yhdm/:id"
 }
