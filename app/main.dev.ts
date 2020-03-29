@@ -14,6 +14,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import fetch from 'node-fetch';
 import MenuBuilder from './menu';
+import YHDM from './components/YHDM';
 
 type BilibiliCookies = {
   www: Array<object>;
@@ -30,6 +31,7 @@ export default class AppUpdater {
 global.sharedObject = {};
 let mainWindow: BrowserWindow | null = null;
 let bilibiliWindow: BrowserWindow | null = null;
+let yhdmWindow: BrowserWindow | null = null;
 let bibililiCookies: BilibiliCookies = {};
 let bilibiliInfo: object = {};
 
@@ -60,7 +62,10 @@ function bilibiliLogin() {
     if (bilibiliWindow) return;
     bilibiliWindow = new BrowserWindow({
       width: 1024,
-      height: 728
+      height: 728,
+      webPreferences: {
+        devTools: false
+      }
     });
     global.sharedObject.bilibiliId = bilibiliWindow.webContents.id;
 
@@ -83,11 +88,24 @@ function bilibiliLogin() {
               cookie => cookie.name === 'DedeUserID'
             ).value;
             bilibiliWindow.webContents.removeListener('did-navigate', onlogin);
-            bibililiGetFollowing();
+            fetch(
+              'https://api.bilibili.com/x/relation/followings?vmid=' +
+                bilibiliInfo.userId
+            )
+              .then(res => res.json())
+              .then(json => {
+                mainWindow?.webContents.send(
+                  'bilibili-followings',
+                  json.data.list
+                );
+              });
           });
       }
     };
     bilibiliWindow.webContents.on('did-navigate', onlogin);
+    mainWindow.on('close', () => {
+      bilibiliWindow?.close();
+    });
   });
 }
 
@@ -114,6 +132,29 @@ function bibililiGetFollowing() {
       mainWindow?.webContents.send('bilibili-followings', json.data.list);
     });
 }
+
+function yhdm() {
+  ipcMain.on('message', (e, text) => console.log(text));
+  ipcMain.on('load-yhdm-animation', (e, url) => {
+    if (yhdmWindow) {
+      yhdmWindow.close();
+    }
+    yhdmWindow = new BrowserWindow({
+      // show: false,
+      width: 800,
+      height: 600,
+      webPreferences: {
+        webSecurity: false,
+        preload: path.resolve(__dirname, 'yhdm-inject.js')
+      }
+    });
+    yhdmWindow.on('closed', () => {
+      yhdmWindow = null;
+    });
+
+    yhdmWindow.loadURL(url);
+  });
+}
 const createWindow = async () => {
   if (
     process.env.NODE_ENV === 'development' ||
@@ -129,7 +170,8 @@ const createWindow = async () => {
     webPreferences:
       process.env.NODE_ENV === 'development' || process.env.E2E_BUILD === 'true'
         ? {
-            nodeIntegration: true
+            nodeIntegration: true,
+            webSecurity: false
           }
         : {
             preload: path.join(__dirname, 'dist/renderer.prod.js')
@@ -138,6 +180,14 @@ const createWindow = async () => {
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
+  mainWindow.webContents.session.webRequest.onBeforeSendHeaders(
+    (details, callback) => {
+      if (/^https?:\/\/[^.]+\.bilivideo.com/.test(details.url)) {
+        details.requestHeaders['Referer'] = 'https://www.bilibili.com/';
+      }
+      callback({ requestHeaders: details.requestHeaders });
+    }
+  );
   // @TODO: Use 'ready-to-show' event
   //        https://github.com/electron/electron/blob/master/docs/api/browser-window.md#using-ready-to-show-event
   mainWindow.webContents.on('did-finish-load', () => {
@@ -164,9 +214,11 @@ const createWindow = async () => {
   new AppUpdater();
   bilibiliLogin();
 
+  yhdm();
   global.sharedObject.mainId = mainWindow.webContents.id;
 };
-
+// 允许访问iframe
+app.commandLine.appendSwitch('disable-site-isolation-trials');
 /**
  * Add event listeners...
  */

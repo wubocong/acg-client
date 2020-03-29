@@ -78,7 +78,7 @@ export default merge.smart(baseConfig, {
       },
       {
         test: /\.css$/,
-        include: /antd/,
+        include: /(antd|dplayer)/,
         use: [
           {
             loader: 'style-loader'
@@ -90,7 +90,7 @@ export default merge.smart(baseConfig, {
       },
       {
         test: /^((?!\.global).)*\.css$/,
-        exclude: /antd/,
+        exclude: /(antd|dplayer)/,
         use: [
           {
             loader: 'style-loader'

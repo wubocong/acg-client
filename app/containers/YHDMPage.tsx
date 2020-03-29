@@ -1,12 +1,15 @@
 import React from 'react';
 import DPlayer from 'react-dplayer';
-import { Button, Layout } from 'antd';
-import fetch from 'node-fetch';
-
+import { Button, Spin, Layout } from 'antd';
+import { ipcRenderer, TouchBarSlider } from 'electron';
 const { Content } = Layout;
 
-export default class YHDM extends React.PureComponent {
-  state = { episodeLoading: true, list: [], currentEpisodeURL: '' };
+export default class YHDMPage extends React.PureComponent {
+  state = {
+    pageLoading: true,
+    episodeLoading: false,
+    list: []
+  };
   componentDidMount() {
     const id = this.props.match.params.id;
     fetch(`http://www.yhdm.tv/show/${id}.html`)
@@ -21,32 +24,34 @@ export default class YHDM extends React.PureComponent {
           item.href = a.href.slice(a.href.indexOf('/v'));
           list.push(item);
         });
-        console.log(list);
-        this.setState({ ...this.state, episodeLoading: false, list });
+        this.setState({ ...this.state, pageLoading: false, list });
       });
+    ipcRenderer.on('yhdm-video-src', (_, url) => {
+      this.dplayer.switchVideo({ url });
+      this.setState({
+        ...this.state,
+        episodeLoading: false
+      });
+    });
   }
   selectEpisode = href => {
-    fetch('http://www.yhdm.tv' + href)
-      .then(res => res.text())
-      .then(html => {
-        const currentEpisodeURL = html.match(/data-vid="(https.+\.mp4)/)[1];
-        console.log(currentEpisodeURL);
-        this.setState({
-          ...this.setState,
-          currentEpisodeURL
-        });
-      });
+    this.setState({ ...this.state, episodeLoading: true });
+    ipcRenderer.send('load-yhdm-animation', 'http://www.yhdm.tv' + href);
+  };
+  getDplayerInstance = dplayer => {
+    this.dplayer = dplayer;
   };
   render() {
     return (
       <Content>
-        {!this.state.episodeLoading && (
-          <section>
-            <DPlayer
-              options={{ video: { url: this.state.currentEpisodeURL } }}
-            />
-          </section>
-        )}
+        <section>
+          {this.state.episodeLoading || this.state.pageLoading ? (
+            <Spin size="large" />
+          ) : (
+            <DPlayer onLoad={this.getDplayerInstance} />
+          )}
+        </section>
+
         <section>
           {this.state.list.map(item => (
             <Button

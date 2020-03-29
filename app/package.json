@@ -14,5 +14,8 @@
     "postinstall": "npm run electron-rebuild"
   },
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "flv.js": "^1.5.0",
+    "hls.js": "^0.13.2"
+  }
 }

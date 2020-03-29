@@ -54,7 +54,7 @@ export default merge.smart(baseConfig, {
       // Process antd separately
       {
         test: /\.css$/,
-        include: /antd/,
+        include: /(antd|dplayer)/,
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
@@ -70,7 +70,7 @@ export default merge.smart(baseConfig, {
       // Pipe other styles through css modules and append to style.css
       {
         test: /^((?!\.global).)*\.css$/,
-        exclude: /antd/,
+        exclude: /(antd|dplayer)/,
         :use [
           {
             loader: MiniCssExtractPlugin.loader

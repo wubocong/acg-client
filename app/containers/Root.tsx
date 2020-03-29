@@ -8,10 +8,10 @@ import { Layout, Menu } from 'antd';
 
 import { Store } from '../reducers/types';
 import routes from '../constants/routes.json';
-import App from '../containers/App';
-import BilibiliPage from '../containers/BilibiliPage';
-import AnimationPage from '../containers/AnimationPage';
-import YHDM from '../components/YHDM';
+import App from './App';
+import BilibiliPage from './BilibiliPage';
+import AnimationPage from './AnimationPage';
+import YHDMPage from './YHDMPage';
 
 const { Header, Footer } = Layout;
 
@@ -39,7 +39,7 @@ const Root = ({ store, history }: Props) => (
             <Switch>
               <Route path={routes.BILIBILI} component={BilibiliPage} />
               <Route exact path={routes.ANIMATION} component={AnimationPage} />
-              <Route path={routes.YHDM} component={YHDM} />
+              <Route path={routes.YHDM} component={YHDMPage} />
               <Route component={BilibiliPage} />
             </Switch>
           </Layout>

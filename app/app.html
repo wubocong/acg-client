@@ -22,7 +22,7 @@
     <div id="root"></div>
     <script>
       if (typeof process === 'object') {
-        const scripts = [];
+        const scripts = ['./node_modules/flv.js/dist/flv.js', './node_modules/hls.js/dist/hls.js'];
 
         if (process.env.NODE_ENV === 'development') {
           // Dynamically insert the DLL script in development env in the
