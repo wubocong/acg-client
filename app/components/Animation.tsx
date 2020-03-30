@@ -5,29 +5,50 @@ import { Link } from 'react-router-dom';
 const { Sider, Content } = Layout;
 const { Search } = Input;
 
-export default class Animation extends React.PureComponent {
+type AnimationType = {
+  description: string;
+  id: string;
+  img: string;
+  name: string;
+};
+
+type AnimationProps = {};
+type AnimationState = {
+  animationList: AnimationType[];
+  searching: boolean;
+};
+export default class Animation extends React.PureComponent<
+  AnimationProps,
+  AnimationState
+> {
   state = { animationList: [], searching: false };
   onSearch = async (value: string) => {
-    const animationList = [];
-    this.setState({ ...this.state, searching: true });
+    const animationList: AnimationType[] = [];
+    this.setState({ searching: true });
     const html = await fetch('http://www.yhdm.tv/search/' + value).then(res =>
       res.text()
     );
     const dom = new DOMParser().parseFromString(html, 'text/html');
 
     dom.querySelectorAll('.lpic ul li').forEach(li => {
-      const item = {};
+      const item: AnimationType = {
+        description: '',
+        id: '',
+        img: '',
+        name: ''
+      };
 
       for (let i = li.children.length - 1; i >= 0; i--) {
-        const node = li.children[i];
+        const node = li.children[i] as HTMLElement;
         const tagName = node.tagName.toLowerCase();
         if (tagName === 'a') {
-          item.img = node.children[0].src;
+          item.img = (node.children[0] as HTMLImageElement).src;
         } else if (tagName === 'h2') {
-          const start = node.children[0].href.indexOf('/show') + 6;
-          const end = node.children[0].href.indexOf('.html');
-          item.id = node.children[0].href.slice(start, end);
-          item.name = node.children[0].innerText;
+          const anchor = node.children[0] as HTMLAnchorElement;
+          const start = anchor.href.indexOf('/show') + 6;
+          const end = anchor.href.indexOf('.html');
+          item.id = anchor.href.slice(start, end);
+          item.name = anchor.innerText;
         } else if (tagName === 'p') {
           item.description = node.innerText;
         }
@@ -35,12 +56,12 @@ export default class Animation extends React.PureComponent {
       animationList.push(item);
     });
     // console.log(animationList);
-    this.setState({ ...this.state, searching: false, animationList });
+    this.setState({ searching: false, animationList });
   };
   render() {
     return (
       <Content>
-        <section>
+        <section style={{ padding: '24px 0' }}>
           <Search
             placeholder="请输入动漫名"
             enterButton="Search"
@@ -58,18 +79,14 @@ export default class Animation extends React.PureComponent {
               itemLayout="vertical"
               size="large"
               dataSource={this.state.animationList}
-              renderItem={item => (
+              renderItem={(item: AnimationType) => (
                 <List.Item
                   key="item.name"
                   extra={<img src={item.img} width={75} />}
                 >
                   <List.Item.Meta
                     title={
-                      <Link
-                        to={'/animation/yhdm/' + item.id}
-                      >
-                        {item.name}
-                      </Link>
+                      <Link to={'/animation/yhdm/' + item.id}>{item.name}</Link>
                     }
                   ></List.Item.Meta>
                   {item.description}

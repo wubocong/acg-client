@@ -1,14 +1,16 @@
 import React from 'react';
 import { ipcRenderer } from 'electron';
-import equal from 'fast-deep-equal';
-
-import { followingType } from '../reducers/types';
 import { Menu, Avatar, Layout } from 'antd';
+
+import { followingType, bilibiliStateType } from '../reducers/types';
 
 const { SubMenu } = Menu;
 const { Sider, Content } = Layout;
 
-export default class Home extends React.PureComponent {
+type BilibiliProps = {
+  bilibili: bilibiliStateType;
+};
+export default class Bilibili extends React.PureComponent<BilibiliProps> {
   componentDidMount() {
     ipcRenderer.invoke('bilibili-login');
   }

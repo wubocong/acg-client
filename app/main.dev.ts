@@ -14,7 +14,6 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import fetch from 'node-fetch';
 import MenuBuilder from './menu';
-import YHDM from './components/YHDM';
 
 type BilibiliCookies = {
   www: Array<object>;
@@ -72,22 +71,22 @@ function bilibiliLogin() {
     bilibiliWindow.loadURL('https://passport.bilibili.com/login');
     const onlogin = (_: any, url: string) => {
       if (url === 'https://www.bilibili.com/') {
-        bilibiliWindow.webContents.session.cookies
+        bilibiliWindow?.webContents.session.cookies
           .get({ url: 'https://space.bilibili.com/' })
           .then(cookies => {
             bibililiCookies.space = cookies;
           });
-        bilibiliWindow.webContents.session.cookies
+        bilibiliWindow?.webContents.session.cookies
           .get({ url: 'https://www.bilibili.com/' })
           .then(cookies => {
             // mainWindow.webContents.send('bilibili-cookies', cookies);
             // bilibiliWindow.hide();
             bibililiCookies.www = cookies;
-            bilibiliWindow.hide();
+            bilibiliWindow?.hide();
             bilibiliInfo.userId = cookies.find(
               cookie => cookie.name === 'DedeUserID'
             ).value;
-            bilibiliWindow.webContents.removeListener('did-navigate', onlogin);
+            bilibiliWindow?.webContents.removeListener('did-navigate', onlogin);
             fetch(
               'https://api.bilibili.com/x/relation/followings?vmid=' +
                 bilibiliInfo.userId
@@ -103,7 +102,7 @@ function bilibiliLogin() {
       }
     };
     bilibiliWindow.webContents.on('did-navigate', onlogin);
-    mainWindow.on('close', () => {
+    mainWindow?.on('close', () => {
       bilibiliWindow?.close();
     });
   });

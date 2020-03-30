@@ -1,7 +1,11 @@
 import { Dispatch as ReduxDispatch, Store as ReduxStore, Action } from 'redux';
 
+export type bilibiliStateType = {
+  followings: followingType[];
+};
+
 export type rootStateType = {
-  bilibili: object;
+  bilibili: bilibiliStateType;
 };
 
 export type followingType = {
