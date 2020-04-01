@@ -1,13 +1,5 @@
 import { Dispatch as ReduxDispatch, Store as ReduxStore, Action } from 'redux';
 
-export type bilibiliStateType = {
-  followings: followingType[];
-};
-
-export type rootStateType = {
-  bilibili: bilibiliStateType;
-};
-
 export type followingType = {
   mid: number;
   attribute: number;
@@ -19,6 +11,27 @@ export type followingType = {
   sign: string;
   official_verify: { type: number; desc: string };
   vip: object;
+};
+
+export type cookieType = {
+  url: string;
+  name: string;
+  value: string;
+  domain: string;
+  path: string;
+  secure: boolean;
+  httpOnly: boolean;
+  expirationDate: number;
+};
+
+export type bilibiliStateType = {
+  followings: followingType[];
+  cookies: cookieType[];
+  userId: string;
+};
+
+export type rootStateType = {
+  bilibili: bilibiliStateType;
 };
 
 export type Dispatch = ReduxDispatch<Action<string>>;

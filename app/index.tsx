@@ -7,10 +7,10 @@ import 'antd/dist/antd.css';
 
 import './app.global.scss';
 import { configureStore, history } from './store/configureStore';
-import { setFollowings } from './actions/bilibili';
-import { followingType } from './reducers/types';
+import { Store } from './reducers/types';
+import { setCookies } from './actions/bilibili';
 
-const store = configureStore();
+const store = configureStore() as Store;
 
 const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer;
 
@@ -23,9 +23,6 @@ document.addEventListener('DOMContentLoaded', () =>
   )
 );
 
-ipcRenderer.on('bilibili-cookies', (e, cookies: string) => {
-  console.log(cookies);
-});
-ipcRenderer.on('bilibili-followings', (e, followings: Array<followingType>) => {
-  store.dispatch(setFollowings(followings));
+ipcRenderer.on('bilibili-cookies', (_, cookies: cookieType[]) => {
+  store.dispatch(setCookies(cookies));
 });

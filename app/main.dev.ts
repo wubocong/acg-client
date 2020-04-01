@@ -15,10 +15,6 @@ import log from 'electron-log';
 import fetch from 'node-fetch';
 import MenuBuilder from './menu';
 
-type BilibiliCookies = {
-  www: Array<object>;
-  space: Array<object>;
-};
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -31,8 +27,8 @@ global.sharedObject = {};
 let mainWindow: BrowserWindow | null = null;
 let bilibiliWindow: BrowserWindow | null = null;
 let yhdmWindow: BrowserWindow | null = null;
-let bibililiCookies: BilibiliCookies = {};
-let bilibiliInfo: object = {};
+// let bibililiCookies: Array<object> | null = null;
+let bilibiliInfo: { userId: string } = { userId: '' };
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -56,7 +52,7 @@ const installExtensions = async () => {
   ).catch(console.log);
 };
 
-function bilibiliLogin() {
+function registerBilibili() {
   ipcMain.handle('bilibili-login', () => {
     if (bilibiliWindow) return;
     bilibiliWindow = new BrowserWindow({
@@ -72,32 +68,16 @@ function bilibiliLogin() {
     const onlogin = (_: any, url: string) => {
       if (url === 'https://www.bilibili.com/') {
         bilibiliWindow?.webContents.session.cookies
-          .get({ url: 'https://space.bilibili.com/' })
-          .then(cookies => {
-            bibililiCookies.space = cookies;
-          });
-        bilibiliWindow?.webContents.session.cookies
           .get({ url: 'https://www.bilibili.com/' })
-          .then(cookies => {
-            // mainWindow.webContents.send('bilibili-cookies', cookies);
-            // bilibiliWindow.hide();
-            bibililiCookies.www = cookies;
+          .then((cookies = []) => {
+            mainWindow?.webContents.send('bilibili-cookies', cookies);
             bilibiliWindow?.hide();
-            bilibiliInfo.userId = cookies.find(
-              cookie => cookie.name === 'DedeUserID'
-            ).value;
             bilibiliWindow?.webContents.removeListener('did-navigate', onlogin);
-            fetch(
-              'https://api.bilibili.com/x/relation/followings?vmid=' +
-                bilibiliInfo.userId
-            )
-              .then(res => res.json())
-              .then(json => {
-                mainWindow?.webContents.send(
-                  'bilibili-followings',
-                  json.data.list
-                );
-              });
+
+            // bibililiCookies = cookies;
+            // bilibiliInfo.userId = cookies.find(
+            //   cookie => cookie.name === 'DedeUserID'
+            // ).value;
           });
       }
     };
@@ -108,33 +88,33 @@ function bilibiliLogin() {
   });
 }
 
-function bibililiGetFollowing() {
-  // const request = net.request({
-  //   url:
-  //     'https://api.bilibili.com/x/relation/followings?vmid=' +
-  //     bibililiCookies.space.find(cookie => cookie.name === 'DedeUserID').value,
-  //   method: 'GET',
-  //   session: bilibiliWindow?.webContents.session
-  // });
-  // request.end();
-  // request.on('response', response => {
-  //   response.setEncoding('utf8');;
-  //   response.on('data', data => {
-  //     console.log(data.toString());
-  //   });
-  // });
-  fetch(
-    'https://api.bilibili.com/x/relation/followings?vmid=' + bilibiliInfo.userId
-  )
-    .then(res => res.json())
-    .then(json => {
-      mainWindow?.webContents.send('bilibili-followings', json.data.list);
-    });
-}
+// function bibililiGetFollowing() {
+//   const request = net.request({
+//     url:
+//       'https://api.bilibili.com/x/relation/followings?vmid=' +
+//       bibililiCookies.space.find(cookie => cookie.name === 'DedeUserID').value,
+//     method: 'GET',
+//     session: bilibiliWindow?.webContents.session
+//   });
+//   request.end();
+//   request.on('response', response => {
+//     response.setEncoding('utf8');;
+//     response.on('data', data => {
+//       console.log(data.toString());
+//     });
+//   });
+//   fetch(
+//     'https://api.bilibili.com/x/relation/followings?vmid=' + bilibiliInfo.userId
+//   )
+//     .then(res => res.json())
+//     .then(json => {
+//       mainWindow?.webContents.send('bilibili-followings', json.data.list);
+//     });
+// }
 
 function yhdm() {
-  ipcMain.on('message', (e, text) => console.log(text));
-  ipcMain.on('load-yhdm-animation', (e, url) => {
+  ipcMain.on('message', (_, text) => console.log(text));
+  ipcMain.on('load-yhdm-animation', (_, url) => {
     if (yhdmWindow) {
       yhdmWindow.close();
     }
@@ -211,7 +191,7 @@ const createWindow = async () => {
   // Remove this if your app does not use auto updates
   // eslint-disable-next-line
   new AppUpdater();
-  bilibiliLogin();
+  registerBilibili();
 
   yhdm();
   global.sharedObject.mainId = mainWindow.webContents.id;
