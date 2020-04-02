@@ -8,7 +8,6 @@ import 'antd/dist/antd.css';
 import './app.global.scss';
 import { configureStore, history } from './store/configureStore';
 import { Store } from './reducers/types';
-import { setCookies } from './actions/bilibili';
 
 const store = configureStore() as Store;
 
@@ -22,7 +21,3 @@ document.addEventListener('DOMContentLoaded', () =>
     document.getElementById('root')
   )
 );
-
-ipcRenderer.on('bilibili-cookies', (_, cookies: cookieType[]) => {
-  store.dispatch(setCookies(cookies));
-});

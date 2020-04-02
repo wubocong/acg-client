@@ -26,11 +26,11 @@ type BilibiliProps = {
   bilibili: bilibiliStateType;
   setFollowings: (followings: followingType[]) => void;
   setCookies: (cookies: cookieType[]) => void;
+  setFollowingsAsync: (userId: string) => Promise<void>;
 };
 
 type BilibiliState = {
   infoFlow: videoType[];
-  followings: followingType[];
 };
 export default class Bilibili extends React.PureComponent<
   BilibiliProps,
@@ -41,20 +41,13 @@ export default class Bilibili extends React.PureComponent<
     ipcRenderer.invoke('bilibili-login');
     ipcRenderer.on('bilibili-cookies', (_, cookies: Array<cookieType>) => {
       this.props.setCookies(cookies);
-      fetch(
-        'https://api.bilibili.com/x/relation/followings?vmid=' +
-          this.props.bilibili.userId
-      )
-        .then(res => res.json())
-        .then(json => {
-          const followings = json.data.list;
-          this.setState({ followings });
-          setFollowings(followings);
-          this.getInfoFlow(followings);
-        });
+      this.props.setFollowingsAsync(this.props.bilibili.userId).then(() => {
+        this.getInfoFlow();
+      });
     });
   }
-  getInfoFlow = async (followings: followingType[]) => {
+  getInfoFlow = async () => {
+    const { followings } = this.props.bilibili;
     if (followings) {
       const requests = followings.map(following =>
         fetch(
@@ -78,7 +71,7 @@ export default class Bilibili extends React.PureComponent<
     }
   };
   render() {
-    const { followings } = this.state;
+    const followings = this.props.bilibili.followings || [];
     return (
       <>
         <Sider width={200} className="site-layout-background">
