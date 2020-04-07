@@ -22,6 +22,7 @@ type YHDMState = {
   currentEpisode: string;
   episodeLoading: boolean;
   episodeList: EpisodeType[];
+  iframe: string;
   pageLoading: boolean;
   title: string;
 };
@@ -35,6 +36,7 @@ export default class YHDMPage extends React.PureComponent<
     currentEpisode: '',
     episodeLoading: false,
     episodeList: [],
+    iframe: '',
     pageLoading: true,
     title: ''
   };
@@ -58,8 +60,12 @@ export default class YHDMPage extends React.PureComponent<
     ipcRenderer.on('yhdm-video-src', (_, url) => {
       this.dplayer?.switchVideo({ url });
       this.setState({
-        episodeLoading: false
+        episodeLoading: false,
+        iframe: ''
       });
+    });
+    ipcRenderer.on('yhdm-iframe-src', (_, iframe) => {
+      this.setState({ episodeLoading: false, iframe });
     });
   }
   getDplayerInstance = dplayer => {
@@ -97,15 +103,19 @@ export default class YHDMPage extends React.PureComponent<
           >
             <Spin size="large" />
           </div>
-          <ReactDPlayer
-            style={{
-              display:
-                this.state.episodeLoading || this.state.pageLoading
-                  ? 'none'
-                  : 'block'
-            }}
-            onLoad={this.getDplayerInstance}
-          />
+          {this.state.iframe ? (
+            <iframe style={{ width: '100%', height: 'calc(60vw - 60px)' }} src={this.state.iframe} />
+          ) : (
+            <ReactDPlayer
+              style={{
+                display:
+                  this.state.episodeLoading || this.state.pageLoading
+                    ? 'none'
+                    : 'block'
+              }}
+              onLoad={this.getDplayerInstance}
+            />
+          )}
         </section>
 
         <section>

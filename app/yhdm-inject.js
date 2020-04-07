@@ -19,7 +19,11 @@ window.onload = function() {
   ipcRenderer.send('message', 'video: ' + video);
 
   if (video) {
-    ipcRenderer.sendTo(sharedObject.mainId, 'yhdm-video-src', video.src);
+    if (/^blob:/.test(video.src)) {
+      ipcRenderer.sendTo(sharedObject.mainId, 'yhdm-iframe-src', iframe.src);
+    } else {
+      ipcRenderer.sendTo(sharedObject.mainId, 'yhdm-video-src', video.src);
+    }
     ipcRenderer.send('message', 'video src: ' + video.src);
   } else {
     ipcRenderer.send('load-yhdm-animation', iframe.src);

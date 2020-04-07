@@ -8,7 +8,6 @@ import {
   cookieType
 } from '../reducers/types';
 import fetch from 'node-fetch';
-import { setFollowings } from '../actions/bilibili';
 
 const { SubMenu } = Menu;
 const { Sider, Content } = Layout;
@@ -40,6 +39,7 @@ export default class Bilibili extends React.PureComponent<
   componentDidMount() {
     ipcRenderer.invoke('bilibili-login');
     ipcRenderer.on('bilibili-cookies', (_, cookies: Array<cookieType>) => {
+
       this.props.setCookies(cookies);
       this.props.setFollowingsAsync(this.props.bilibili.userId).then(() => {
         this.getInfoFlow();
