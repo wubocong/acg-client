@@ -9,13 +9,13 @@
  * `./app/main.prod.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, ipcMain, net } from 'electron';
+import fs from 'fs';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import fetch from 'node-fetch';
 import MenuBuilder from './menu';
 
-console.log(app.getPath('userData'))
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -28,8 +28,8 @@ global.sharedObject = {};
 let mainWindow: BrowserWindow | null = null;
 let bilibiliWindow: BrowserWindow | null = null;
 let yhdmWindow: BrowserWindow | null = null;
-// let bibililiCookies: Array<object> | null = null;
-let bilibiliInfo: { userId: string } = { userId: '' };
+// let bilibiliCookies: Array<object> | null = null;
+// const bilibiliInfo: { userId?: string } = {};
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
@@ -53,6 +53,19 @@ const installExtensions = async () => {
   ).catch(console.log);
 };
 
+function throttle(func: Function, delay: number) {
+  let sign = true;
+  return function(this: any, ...args: any[]) {
+    if (sign) {
+      sign = false;
+      func.apply(this, args);
+      setTimeout(() => {
+        sign = true;
+      }, delay);
+    }
+  };
+}
+
 function registerBilibili() {
   ipcMain.handle('bilibili-login', () => {
     if (bilibiliWindow) return;
@@ -66,16 +79,16 @@ function registerBilibili() {
     global.sharedObject.bilibiliId = bilibiliWindow.webContents.id;
 
     bilibiliWindow.loadURL('https://passport.bilibili.com/login');
-    const onlogin = (_: any, url: string) => {
+    const onlogin = (_: Event, url: string) => {
       if (url === 'https://www.bilibili.com/') {
         bilibiliWindow?.webContents.session.cookies
           .get({ url: 'https://www.bilibili.com/' })
           .then((cookies = []) => {
             mainWindow?.webContents.send('bilibili-cookies', cookies);
-            bilibiliWindow?.hide();
+            // bilibiliWindow?.hide();
             bilibiliWindow?.webContents.removeListener('did-navigate', onlogin);
 
-            // bibililiCookies = cookies;
+            // bilibiliCookies = cookies;
             // bilibiliInfo.userId = cookies.find(
             //   cookie => cookie.name === 'DedeUserID'
             // ).value;
@@ -89,32 +102,9 @@ function registerBilibili() {
   });
 }
 
-// function bibililiGetFollowing() {
-//   const request = net.request({
-//     url:
-//       'https://api.bilibili.com/x/relation/followings?vmid=' +
-//       bibililiCookies.space.find(cookie => cookie.name === 'DedeUserID').value,
-//     method: 'GET',
-//     session: bilibiliWindow?.webContents.session
-//   });
-//   request.end();
-//   request.on('response', response => {
-//     response.setEncoding('utf8');;
-//     response.on('data', data => {
-//       console.log(data.toString());
-//     });
-//   });
-//   fetch(
-//     'https://api.bilibili.com/x/relation/followings?vmid=' + bilibiliInfo.userId
-//   )
-//     .then(res => res.json())
-//     .then(json => {
-//       mainWindow?.webContents.send('bilibili-followings', json.data.list);
-//     });
-// }
-
 function yhdm() {
   ipcMain.on('message', (_, text) => console.log(text));
+
   ipcMain.on('load-yhdm-animation', (_, url) => {
     if (yhdmWindow) {
       yhdmWindow.close();
@@ -133,6 +123,33 @@ function yhdm() {
     });
 
     yhdmWindow.loadURL(url);
+  });
+  ipcMain.on('downloadVideo', (_, { url, name }) => {
+    fetch(url)
+      .then(res => {
+        const totalLength = Number(res.headers.get('content-length'));
+        let downloadedLength = 0;
+        const file = fs.createWriteStream(
+          path.resolve(app.getPath('downloads'), `${name}${path.extname(url)}`)
+        );
+        res.body.pipe(file);
+        const sendProgress = throttle((percent: number) => {
+          mainWindow?.webContents.send('downloadVideoProgress', percent);
+        }, 1000);
+        res.body.on('data', chunk => {
+          downloadedLength += chunk.length;
+          const percent = Math.ceil((downloadedLength / totalLength) * 100);
+          sendProgress(percent);
+        });
+        res.body.on('end', () => {
+          mainWindow?.webContents.send('downloadVideoProgress', 100);
+          file.end();
+        });
+        return true;
+      })
+      .catch(err => {
+        console.error(err);
+      });
   });
 }
 const createWindow = async () => {
@@ -163,7 +180,12 @@ const createWindow = async () => {
   mainWindow.webContents.session.webRequest.onBeforeSendHeaders(
     (details, callback) => {
       if (/^https?:\/\/[^.]+\.bilivideo.com/.test(details.url)) {
-        details.requestHeaders['Referer'] = 'https://www.bilibili.com/';
+        callback({
+          requestHeaders: {
+            ...details.requestHeaders,
+            Referer: 'https://www.bilibili.com/'
+          }
+        });
       }
       callback({ requestHeaders: details.requestHeaders });
     }

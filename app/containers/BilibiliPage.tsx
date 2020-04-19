@@ -3,11 +3,7 @@ import { connect } from 'react-redux';
 
 import Bilibili from '../components/Bilibili';
 import { rootStateType } from '../reducers/types';
-import {
-  setFollowings,
-  setCookies,
-  setFollowingsAsync
-} from '../actions/bilibili';
+import { setCookies, setFollowingsAsync } from '../actions/bilibili';
 
 function mapStateToProps(state: rootStateType) {
   return {
@@ -16,10 +12,7 @@ function mapStateToProps(state: rootStateType) {
 }
 
 function mapDispatchToProps(dispatch: Dispatch) {
-  return bindActionCreators(
-    { setFollowings, setCookies, setFollowingsAsync },
-    dispatch
-  );
+  return bindActionCreators({ setCookies, setFollowingsAsync }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Bilibili);

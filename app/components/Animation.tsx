@@ -21,11 +21,15 @@ export default class Animation extends React.PureComponent<
   AnimationProps,
   AnimationState
 > {
-  state = { animationList: [], searching: false };
+  constructor(props: AnimationProps) {
+    super(props);
+    this.state = { animationList: [], searching: false };
+  }
+
   onSearch = async (value: string) => {
     const animationList: AnimationType[] = [];
     this.setState({ searching: true });
-    const html = await fetch('http://www.yhdm.tv/search/' + value).then(res =>
+    const html = await fetch(`http://www.yhdm.tv/search/${value}`).then(res =>
       res.text()
     );
     const dom = new DOMParser().parseFromString(html, 'text/html');
@@ -38,7 +42,7 @@ export default class Animation extends React.PureComponent<
         name: ''
       };
 
-      for (let i = li.children.length - 1; i >= 0; i--) {
+      for (let i = li.children.length - 1; i >= 0; i -= 1) {
         const node = li.children[i] as HTMLElement;
         const tagName = node.tagName.toLowerCase();
         if (tagName === 'a') {
@@ -58,7 +62,9 @@ export default class Animation extends React.PureComponent<
     // console.log(animationList);
     this.setState({ searching: false, animationList });
   };
+
   render() {
+    const { searching, animationList } = this.state;
     return (
       <Content>
         <section style={{ padding: '24px 0' }}>
@@ -70,7 +76,7 @@ export default class Animation extends React.PureComponent<
           />
         </section>
         <section>
-          {this.state.searching ? (
+          {searching ? (
             <div style={{ textAlign: 'center', paddingTop: '50px' }}>
               <Spin size="large" />
             </div>
@@ -78,17 +84,17 @@ export default class Animation extends React.PureComponent<
             <List
               itemLayout="vertical"
               size="large"
-              dataSource={this.state.animationList}
+              dataSource={animationList}
               renderItem={(item: AnimationType) => (
                 <List.Item
                   key="item.name"
-                  extra={<img src={item.img} width={75} />}
+                  extra={<img src={item.img} width={75} alt={item.name} />}
                 >
                   <List.Item.Meta
                     title={
-                      <Link to={'/animation/yhdm/' + item.id}>{item.name}</Link>
+                      <Link to={`/animation/yhdm/${item.id}`}>{item.name}</Link>
                     }
-                  ></List.Item.Meta>
+                  />
                   {item.description}
                 </List.Item>
               )}

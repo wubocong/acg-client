@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDPlayer from 'react-dplayer';
 import DPlayer from 'dplayer';
-import { Button, Spin, Layout } from 'antd';
+import { Button, Layout, message, Progress, Spin } from 'antd';
 import { ipcRenderer } from 'electron';
 import { LeftOutlined } from '@ant-design/icons';
 import { History } from 'history';
@@ -20,11 +20,13 @@ type YHDMProps = {
 };
 type YHDMState = {
   currentEpisode: string;
+  currentVideoUrl: string;
   episodeLoading: boolean;
   episodeList: EpisodeType[];
   iframe: string;
   pageLoading: boolean;
   title: string;
+  videoDownloadedPercent: number | undefined;
 };
 
 export default class YHDMPage extends React.PureComponent<
@@ -32,16 +34,27 @@ export default class YHDMPage extends React.PureComponent<
   YHDMState
 > {
   dplayer: DPlayer | null = null;
-  state = {
-    currentEpisode: '',
-    episodeLoading: false,
-    episodeList: [],
-    iframe: '',
-    pageLoading: true,
-    title: ''
-  };
+
+  constructor(props: YHDMProps) {
+    super(props);
+    this.state = {
+      currentEpisode: '',
+      currentVideoUrl: '',
+      episodeLoading: false,
+      episodeList: [],
+      iframe: '',
+      pageLoading: true,
+      title: '',
+      videoDownloadedPercent: undefined
+    };
+  }
+
   componentDidMount() {
-    const id = this.props.match.params.id;
+    const {
+      match: {
+        params: { id }
+      }
+    } = this.props;
     fetch(`http://www.yhdm.tv/show/${id}.html`)
       .then(res => res.text())
       .then(html => {
@@ -55,11 +68,17 @@ export default class YHDMPage extends React.PureComponent<
           item.href = a.href.slice(a.href.indexOf('/v'));
           episodeList.push(item);
         });
-        this.setState({ pageLoading: false, episodeList, title });
+        return this.setState({ pageLoading: false, episodeList, title });
+      })
+      .catch(err => {
+        // eslint-disable-next-line no-console
+        console.error(err);
       });
+
     ipcRenderer.on('yhdm-video-src', (_, url) => {
       this.dplayer?.switchVideo({ url });
       this.setState({
+        currentVideoUrl: url,
         episodeLoading: false,
         iframe: ''
       });
@@ -68,15 +87,46 @@ export default class YHDMPage extends React.PureComponent<
       this.setState({ episodeLoading: false, iframe });
     });
   }
-  getDplayerInstance = dplayer => {
+
+  downloadVideo = () => {
+    const { currentVideoUrl: url, currentEpisode, title } = this.state;
+    ipcRenderer.send('downloadVideo', {
+      url,
+      name: `${title}-${currentEpisode}`
+    });
+    const listener = (_: Event, percent: number) => {
+      this.setState({ videoDownloadedPercent: percent });
+      if (percent === 100) {
+        message.success(`${title}-${currentEpisode} 下载完成！`);
+        ipcRenderer.off('downloadVideoProgress', listener);
+        setTimeout(() => {
+          this.setState({ videoDownloadedPercent: undefined });
+        }, 3000);
+      }
+    };
+    ipcRenderer.on('downloadVideoProgress', listener);
+  };
+
+  getDplayerInstance = (dplayer: DPlayer) => {
     this.dplayer = dplayer;
   };
+
   selectEpisode = (href: string, episode: string) => {
     this.setState({ episodeLoading: true, currentEpisode: episode });
-    ipcRenderer.send('load-yhdm-animation', 'http://www.yhdm.tv' + href);
+    ipcRenderer.send('load-yhdm-animation', `http://www.yhdm.tv${href}`);
   };
+
   render() {
     const { history } = this.props;
+    const {
+      currentEpisode,
+      episodeList,
+      episodeLoading,
+      iframe,
+      pageLoading,
+      title,
+      videoDownloadedPercent
+    } = this.state;
     return (
       <Content>
         <section style={{ margin: '24px 0' }}>
@@ -88,38 +138,44 @@ export default class YHDMPage extends React.PureComponent<
             }}
           />
           <hgroup>
-            <h1>{this.state.title}</h1>
-            <h3>{this.state.currentEpisode}</h3>
+            <h1>{title}</h1>
+            <h3>{currentEpisode}</h3>
           </hgroup>
           <div
             style={{
               textAlign: 'center',
               padding: '50px 0',
-              display:
-                this.state.episodeLoading || this.state.pageLoading
-                  ? 'block'
-                  : 'none'
+              display: episodeLoading || pageLoading ? 'block' : 'none'
             }}
           >
             <Spin size="large" />
           </div>
-          {this.state.iframe ? (
-            <iframe style={{ width: '100%', height: 'calc(60vw - 60px)' }} src={this.state.iframe} />
+          {iframe ? (
+            <iframe
+              style={{ width: '100%', height: 'calc(60vw - 60px)' }}
+              src={iframe}
+              title="YHDM"
+            />
           ) : (
-            <ReactDPlayer
+            <div
               style={{
                 display:
-                  this.state.episodeLoading || this.state.pageLoading
+                  !currentEpisode || episodeLoading || pageLoading
                     ? 'none'
                     : 'block'
               }}
-              onLoad={this.getDplayerInstance}
-            />
+            >
+              <ReactDPlayer onLoad={this.getDplayerInstance} />
+              <Button onClick={this.downloadVideo}>下载视频</Button>
+              {videoDownloadedPercent && (
+                <Progress percent={videoDownloadedPercent} />
+              )}
+            </div>
           )}
         </section>
 
         <section>
-          {this.state.episodeList.map((item: EpisodeType) => (
+          {episodeList.map((item: EpisodeType) => (
             <Button
               key={item.href}
               onClick={() => this.selectEpisode(item.href, item.episode)}
