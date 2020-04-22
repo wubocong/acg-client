@@ -49,7 +49,7 @@ export default class Bilibili extends React.PureComponent<
 
   componentDidUpdate(prevProps: BilibiliProps) {
     const {
-      bilibili: { followings, userId },
+      bilibili: { followings, userId = '' },
       setFollowingsAsync
     } = this.props;
     const {
@@ -86,7 +86,7 @@ export default class Bilibili extends React.PureComponent<
 
   render() {
     const {
-      bilibili: { followings }
+      bilibili: { followings = [] }
     } = this.props;
     const { infoFlow } = this.state;
     return (
@@ -99,15 +99,14 @@ export default class Bilibili extends React.PureComponent<
             style={{ height: '100%', borderRight: 0 }}
           >
             <SubMenu key="sub1" title="我的关注">
-              {followings &&
-                followings.map((following: followingType) => (
-                  <Menu.Item key={following.mid}>
-                    <Avatar src={following.face} />
-                    <a href={`https://space.bilibili.com/${following.mid}`}>
-                      {following.uname}
-                    </a>
-                  </Menu.Item>
-                ))}
+              {followings.map((following: followingType) => (
+                <Menu.Item key={following.mid}>
+                  <Avatar src={following.face} />
+                  <a href={`https://space.bilibili.com/${following.mid}`}>
+                    {following.uname}
+                  </a>
+                </Menu.Item>
+              ))}
             </SubMenu>
           </Menu>
         </Sider>
