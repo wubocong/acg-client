@@ -7,7 +7,7 @@ import {
   followingType,
   bilibiliStateType,
   cookieType
-} from '../reducers/types';
+} from '../../reducers/types';
 
 const { SubMenu } = Menu;
 const { Sider, Content } = Layout;
