@@ -25,9 +25,9 @@ export type cookieType = {
 };
 
 export type bilibiliStateType = {
-  followings: followingType[];
-  cookies: cookieType[];
-  userId: string;
+  followings?: followingType[];
+  cookies?: cookieType[];
+  userId?: string;
 };
 
 export type rootStateType = {
