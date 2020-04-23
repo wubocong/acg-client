@@ -1,17 +1,19 @@
-import { createStore, applyMiddleware } from 'redux';
-import thunk from 'redux-thunk';
 import { createHashHistory } from 'history';
-import { routerMiddleware } from 'connected-react-router';
-import createRootReducer from '../reducers';
-import { Store, rootStateType } from '../reducers/types';
+import { RouterStore, syncHistoryWithStore } from 'mobx-react-router';
+import BilibiliState from '../state/BilibiliState';
 
-const history = createHashHistory();
-const rootReducer = createRootReducer(history);
-const router = routerMiddleware(history);
-const enhancer = applyMiddleware(thunk, router);
+const hashHistory = createHashHistory();
+const routingStore = new RouterStore();
+const bilibiliStore = new BilibiliState();
 
-function configureStore(initialState?: rootStateType): Store {
-  return createStore(rootReducer, initialState, enhancer);
-}
+const history = syncHistoryWithStore(hashHistory, routingStore);
+
+const configureStore = () => {
+  const stores = {
+    routing: routingStore,
+    bilibili: bilibiliStore
+  };
+  return stores;
+};
 
 export default { configureStore, history };

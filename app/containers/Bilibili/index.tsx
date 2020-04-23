@@ -2,12 +2,10 @@ import React from 'react';
 import { ipcRenderer } from 'electron';
 import { Menu, Avatar, Layout, List } from 'antd';
 import equal from 'fast-deep-equal';
+import { inject, observer } from 'mobx-react';
 
-import {
-  followingType,
-  bilibiliStateType,
-  cookieType
-} from '../../reducers/types';
+import { followingType, cookieType } from '../../state/types';
+import BilibiliState from '../../state/BilibiliState';
 
 const { SubMenu } = Menu;
 const { Sider, Content } = Layout;
@@ -21,42 +19,41 @@ type videoType = {
   description: string;
 };
 
-type BilibiliProps = {
-  bilibili: bilibiliStateType;
-  setCookies: (cookies: cookieType[]) => void;
-  setFollowingsAsync: (userId: string) => void;
+type Props = {
+  bilibili: BilibiliState;
 };
 
-type BilibiliState = {
+type State = {
   infoFlow: videoType[];
 };
-export default class Bilibili extends React.PureComponent<
-  BilibiliProps,
-  BilibiliState
-> {
-  constructor(props: BilibiliProps) {
+
+@inject('bilibili')
+@observer
+export default class Bilibili extends React.PureComponent<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { infoFlow: [] };
   }
 
   componentDidMount() {
     ipcRenderer.invoke('bilibili-login');
-    ipcRenderer.on('bilibili-cookies', (_, cookies: Array<cookieType>) => {
-      const { setCookies } = this.props;
+    ipcRenderer.on('bilibili-cookies', (_, cookies: cookieType[]) => {
+      const {
+        bilibili: { setCookies }
+      } = this.props;
       setCookies(cookies);
     });
   }
 
-  componentDidUpdate(prevProps: BilibiliProps) {
+  componentDidUpdate(prevProps: Props) {
     const {
-      bilibili: { followings, userId = '' },
-      setFollowingsAsync
+      bilibili: { followings, userId = '', setFollowings }
     } = this.props;
     const {
       bilibili: { followings: prevFollowings, userId: prevUserId }
     } = prevProps;
     if (!equal(followings, prevFollowings)) this.getInfoFlow();
-    if (userId !== prevUserId) setFollowingsAsync(userId);
+    if (userId !== prevUserId) setFollowings(userId);
   }
 
   getInfoFlow = async () => {

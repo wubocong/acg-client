@@ -14,11 +14,11 @@ type EpisodeType = {
   href: string;
 };
 
-type YHDMProps = {
+type Props = {
   history: History;
   match: match<{ id: string }>;
 };
-type YHDMState = {
+type State = {
   currentEpisode: string;
   currentVideoUrl: string;
   episodeLoading: boolean;
@@ -29,13 +29,10 @@ type YHDMState = {
   videoDownloadedPercent: number | undefined;
 };
 
-export default class YHDMPage extends React.PureComponent<
-  YHDMProps,
-  YHDMState
-> {
+export default class YHDMPage extends React.PureComponent<Props, State> {
   dplayer: DPlayer | null = null;
 
-  constructor(props: YHDMProps) {
+  constructor(props: Props) {
     super(props);
     this.state = {
       currentEpisode: '',
@@ -50,6 +47,7 @@ export default class YHDMPage extends React.PureComponent<
   }
 
   componentDidMount() {
+    console.log(this.props);
     const {
       match: {
         params: { id }

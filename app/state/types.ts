@@ -1,5 +1,3 @@
-import { Dispatch as ReduxDispatch, Store as ReduxStore, Action } from 'redux';
-
 export type followingType = {
   mid: number;
   attribute: number;
@@ -24,16 +22,6 @@ export type cookieType = {
   expirationDate: number;
 };
 
-export type bilibiliStateType = {
-  followings?: followingType[];
-  cookies?: cookieType[];
-  userId?: string;
-};
-
-export type rootStateType = {
-  bilibili: bilibiliStateType;
-};
-
-export type Dispatch = ReduxDispatch<Action<string>>;
-
-export type Store = ReduxStore<rootStateType, Action<string>>;
+export interface Stores {
+  [index: string]: {};
+}

@@ -6,16 +6,15 @@ import 'antd/dist/antd.css';
 
 import './app.global.scss';
 import { configureStore, history } from './store/configureStore';
-import { Store } from './reducers/types';
 
-const store = configureStore() as Store;
+const stores = configureStore();
 
 const AppContainer = process.env.PLAIN_HMR ? Fragment : ReactHotAppContainer;
 
 document.addEventListener('DOMContentLoaded', () =>
   render(
     <AppContainer>
-      <Root store={store} history={history} />
+      <Root stores={stores} history={history} />
     </AppContainer>,
     document.getElementById('root')
   )
