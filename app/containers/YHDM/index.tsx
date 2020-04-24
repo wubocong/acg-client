@@ -29,7 +29,7 @@ type State = {
   videoDownloadedPercent: number | undefined;
 };
 
-export default class YHDMPage extends React.PureComponent<Props, State> {
+export default class YHDMPage extends React.Component<Props, State> {
   dplayer: DPlayer | null = null;
 
   constructor(props: Props) {
@@ -47,7 +47,6 @@ export default class YHDMPage extends React.PureComponent<Props, State> {
   }
 
   componentDidMount() {
-    console.log(this.props);
     const {
       match: {
         params: { id }

@@ -17,7 +17,7 @@ type State = {
   animationList: AnimationType[];
   searching: boolean;
 };
-export default class Animation extends React.PureComponent<Props, State> {
+export default class Animation extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { animationList: [], searching: false };

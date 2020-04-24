@@ -6,19 +6,19 @@ export default class BilibiliState {
 
   @observable cookies: cookieType[] = [];
 
-  @observable userId = '';
-  // @computed get userId() {
-  //   return this.cookies.find(
-  //     (cookie: cookieType) => cookie.name === 'DedeUserID'
-  //   )?.value;
-  // }
+  @computed get userId() {
+    return (
+      this.cookies.find((cookie: cookieType) => cookie.name === 'DedeUserID')
+        ?.value || ''
+    );
+  }
 
   @action
   setFollowings = (userId: string) => {
     fetch(`https://api.bilibili.com/x/relation/followings?vmid=${userId}`)
       .then(res => res.json())
       .then(json => {
-        this.followings = json?.data?.list;
+        this.followings = json?.data?.list || [];
         return true;
       })
       .catch(err => {
@@ -29,8 +29,5 @@ export default class BilibiliState {
   @action
   setCookies = (data: cookieType[]) => {
     this.cookies = data;
-    this.userId =
-      data.find((cookie: cookieType) => cookie.name === 'DedeUserID')?.value ||
-      '';
   };
 }
