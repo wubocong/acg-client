@@ -46,7 +46,7 @@ if (
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-  const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS'];
+  const extensions = ['REACT_DEVELOPER_TOOLS', 'MOBX_DEVELOPER_TOOLS'];
 
   return Promise.all(
     extensions.map(name => installer.default(installer[name], forceDownload))
@@ -84,7 +84,9 @@ function registerBilibili() {
         bilibiliWindow?.webContents.session.cookies
           .get({ url: 'https://www.bilibili.com/' })
           .then((cookies = []) => {
-            mainWindow?.webContents.send('bilibili-cookies', cookies);
+            setInterval(() => {
+              mainWindow?.webContents.send('bilibili-cookies', cookies);
+            }, 10000);
             // bilibiliWindow?.hide();
             bilibiliWindow?.webContents.removeListener('did-navigate', onlogin);
 
@@ -97,7 +99,7 @@ function registerBilibili() {
     };
     bilibiliWindow.webContents.on('did-navigate', onlogin);
     mainWindow?.on('close', () => {
-      bilibiliWindow?.close();
+      if (bilibiliWindow?.closable) bilibiliWindow?.close();
     });
   });
 }
@@ -115,7 +117,7 @@ function yhdm() {
       height: 600,
       webPreferences: {
         webSecurity: false,
-        preload: path.resolve(__dirname, 'yhdm-inject.js')
+        preload: path.resolve(__dirname, 'preload', 'yhdm.js')
       }
     });
     yhdmWindow.on('closed', () => {

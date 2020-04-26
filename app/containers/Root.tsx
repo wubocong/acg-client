@@ -1,28 +1,30 @@
 import React from 'react';
-import { Provider } from 'react-redux';
-import { ConnectedRouter } from 'connected-react-router';
+import { Provider } from 'mobx-react';
+import { Router } from 'react-router';
 import { hot } from 'react-hot-loader/root';
+// import { SynchronizedHistory } from 'mobx-react-router';
 import { History } from 'history';
 import { Switch, Route, Link } from 'react-router-dom';
 import { Layout, Menu } from 'antd';
 
-import { Store } from '../reducers/types';
+import { Stores } from '../state/types';
 import routes from '../constants/routes.json';
 import App from './App';
-import BilibiliPage from './BilibiliPage';
-import AnimationPage from './AnimationPage';
-import YHDMPage from './YHDMPage';
+import BilibiliPage from './Bilibili';
+import AnimationPage from './Animation';
+import YHDMPage from './YHDM';
 
 const { Header, Footer } = Layout;
 
 type Props = {
-  store: Store;
+  stores: Stores;
   history: History;
 };
 
-const Root = ({ store, history }: Props) => (
-  <Provider store={store}>
-    <ConnectedRouter history={history}>
+const Root = ({ stores, history }: Props) => (
+  // eslint-disable-next-line react/jsx-props-no-spreading
+  <Provider {...stores}>
+    <Router history={history}>
       <App>
         <Layout className="layout">
           <Header>
@@ -48,7 +50,7 @@ const Root = ({ store, history }: Props) => (
           </Footer>
         </Layout>
       </App>
-    </ConnectedRouter>
+    </Router>
   </Provider>
 );
 

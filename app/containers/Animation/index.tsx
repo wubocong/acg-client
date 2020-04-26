@@ -12,16 +12,13 @@ type AnimationType = {
   name: string;
 };
 
-type AnimationProps = {};
-type AnimationState = {
+type Props = {};
+type State = {
   animationList: AnimationType[];
   searching: boolean;
 };
-export default class Animation extends React.PureComponent<
-  AnimationProps,
-  AnimationState
-> {
-  constructor(props: AnimationProps) {
+export default class Animation extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { animationList: [], searching: false };
   }
