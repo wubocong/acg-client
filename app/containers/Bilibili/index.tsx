@@ -47,7 +47,7 @@ const Bilibili = observer(() => {
       fetch(
         `https://api.bilibili.com/x/space/arc/search?mid=${following.mid}&pn=1&ps=100`
       )
-    );
+    ) as Promise<Response>[];
     Promise.all(requests)
       .then(responses => {
         return Promise.all(responses.map(response => response.json()));

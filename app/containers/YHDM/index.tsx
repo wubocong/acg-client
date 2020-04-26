@@ -7,6 +7,8 @@ import { LeftOutlined } from '@ant-design/icons';
 import { History } from 'history';
 import { match } from 'react-router-dom';
 
+import EpisodeList from './EpisodeList';
+
 const { Content } = Layout;
 
 type EpisodeType = {
@@ -72,18 +74,27 @@ export default class YHDMPage extends React.Component<Props, State> {
         console.error(err);
       });
 
-    ipcRenderer.on('yhdm-video-src', (_, url) => {
-      this.dplayer?.switchVideo({ url });
-      this.setState({
-        currentVideoUrl: url,
-        episodeLoading: false,
-        iframe: ''
-      });
-    });
-    ipcRenderer.on('yhdm-iframe-src', (_, iframe) => {
-      this.setState({ episodeLoading: false, iframe });
-    });
+    ipcRenderer.on('yhdm-video-src', this.receiveVideoSrc);
+    ipcRenderer.on('yhdm-iframe-src', this.receiveIframeSrc);
   }
+
+  componentWillUnmount() {
+    ipcRenderer.off('yhdm-video-src', this.receiveVideoSrc);
+    ipcRenderer.off('yhdm-iframe-src', this.receiveIframeSrc);
+  }
+
+  receiveVideoSrc = (_: Event, url: string) => {
+    this.dplayer?.switchVideo({ url });
+    this.setState({
+      currentVideoUrl: url,
+      episodeLoading: false,
+      iframe: ''
+    });
+  };
+
+  receiveIframeSrc = (_: Event, iframe: string) => {
+    this.setState({ episodeLoading: false, iframe });
+  };
 
   downloadVideo = () => {
     const { currentVideoUrl: url, currentEpisode, title } = this.state;
@@ -172,14 +183,10 @@ export default class YHDMPage extends React.Component<Props, State> {
         </section>
 
         <section>
-          {episodeList.map((item: EpisodeType) => (
-            <Button
-              key={item.href}
-              onClick={() => this.selectEpisode(item.href, item.episode)}
-            >
-              {item.episode}
-            </Button>
-          ))}
+          <EpisodeList
+            episodeList={episodeList}
+            selectEpisode={this.selectEpisode}
+          />
         </section>
       </Content>
     );
